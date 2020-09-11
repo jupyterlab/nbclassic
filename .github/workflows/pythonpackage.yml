@@ -25,13 +25,19 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -v -e ".[test]"
-    - name: Install Jupyter Server from source
-      run: |
-        cd ..
-        git clone https://github.com/jupyter/jupyter_server.git
-        cd jupyter_server
-        pip install -e .
-        cd ../nbclassic
     - name: Test with pytest
       run: |
         pytest
+    - name: Test data_files
+      run: |
+        pip install .
+        jupyter server extension list 1>serverextensions 2>&1
+        cat serverextensions
+        cat serverextensions | grep -i "nbclassic.*enabled"
+        cat serverextensions | grep -i "nbclassic.*OK"
+    - name: Test release assets
+      if: ${{ matrix.python-version != '3.6' }}
+      run: |
+        pip install twine build
+        python -m build .
+        twine check dist/*
